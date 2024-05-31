@@ -2,19 +2,26 @@ package com.example.springbootlab.team.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
-@Transactional
 class TeamServiceTest {
 
     @Autowired
     private TeamService teamService;
+
+    @Autowired
+    private TeamRepository teamRepository;
+
+    @AfterEach
+    void cleanUp() {
+        teamRepository.deleteAllInBatch();
+    }
 
     @DisplayName("파라미터가 유효하다면, 팀을 생성할 수 있습니다.")
     @Test
