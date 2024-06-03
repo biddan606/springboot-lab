@@ -2,10 +2,13 @@ package com.example.springbootlab.member.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.springbootlab.member.domain.Member;
 import com.example.springbootlab.member.repository.MemberRepository;
+import com.example.springbootlab.team.domain.Team;
 import com.example.springbootlab.team.service.TeamCreateParam;
 import com.example.springbootlab.team.service.TeamRepository;
 import com.example.springbootlab.team.service.TeamService;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -84,20 +87,27 @@ class MemberServiceTest {
         // given
         // 팀 이름을 Team1, Team2, ...로 생성한다.
         int teamCount = 10;
-        Long[] teamIds = new Long[teamCount];
+        List<Team> teams = new ArrayList<>();
         for (int i = 0; i < teamCount; i++) {
-            TeamCreateParam teamParam = new TeamCreateParam("team" + i);
-            teamIds[i] = teamService.create(teamParam);
+            teams.add(Team.builder()
+                    .name("team" + i)
+                    .build());
         }
+        teamRepository.saveAll(teams);
 
         // 멤버를 (Member1, Team1), (Member1, Team2), ..., (Member5, Team1), (Member5, Team2), ...로 생성한다.
         int memberNameCount = 10;
+        List<Member> members = new ArrayList<>();
         for (int teamI = 0; teamI < teamCount; teamI++) {
             for (int memberNameI = 0; memberNameI < memberNameCount; memberNameI++) {
-                MemberCreateParam memberParam = new MemberCreateParam("member" + memberNameI, 10, teamIds[teamI]);
-                memberService.create(memberParam);
+                members.add(Member.builder()
+                        .name("member" + memberNameI)
+                        .age(10)
+                        .team(teams.get(teamI))
+                        .build());
             }
         }
+        memberRepository.saveAll(members);
 
         Pageable pageable = PageRequest.of(1, 10, Sort.by(
                 Sort.Order.asc("member.name"),
