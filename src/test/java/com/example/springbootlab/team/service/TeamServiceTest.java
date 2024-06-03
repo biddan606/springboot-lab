@@ -23,7 +23,7 @@ class TeamServiceTest {
         teamRepository.deleteAllInBatch();
     }
 
-    @DisplayName("파라미터가 유효하다면, 팀을 생성할 수 있습니다.")
+    @DisplayName("파라미터가 유효하다면, 팀을 생성한다.")
     @Test
     void create_success() {
         // given
@@ -36,7 +36,7 @@ class TeamServiceTest {
         assertThat(savedTeamId).isNotNull();
     }
 
-    @DisplayName("팀이 존재한다면, 팀의 아이디를 통해 불러올 수 있습니다.")
+    @DisplayName("팀이 존재한다면, 팀의 아이디를 통해 불러온다")
     @Test
     void getById_success() {
         // given

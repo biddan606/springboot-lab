@@ -2,16 +2,21 @@ package com.example.springbootlab.member.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.springbootlab.member.repository.MemberRepository;
 import com.example.springbootlab.team.service.TeamCreateParam;
 import com.example.springbootlab.team.service.TeamRepository;
 import com.example.springbootlab.team.service.TeamService;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @SpringBootTest
 class MemberServiceTest {
@@ -29,14 +34,13 @@ class MemberServiceTest {
     private TeamRepository teamRepository;
 
 
-
     @AfterEach
     void cleanUp() {
         memberRepository.deleteAllInBatch();
         teamRepository.deleteAllInBatch();
     }
 
-    @DisplayName("파라미터가 유효하다면, 멤버를 생성할 수 있습니다.")
+    @DisplayName("파라미터가 유효하다면, 멤버를 생성한다.")
     @Test
     void create_success() {
         // given
@@ -52,7 +56,7 @@ class MemberServiceTest {
         assertThat(savedMemberId).isNotNull();
     }
 
-    @DisplayName("멤버가 존재한다면, 멤버의 아이디를 통해 불러올 수 있습니다.")
+    @DisplayName("멤버가 존재한다면, 멤버의 아이디를 통해 불러온다.")
     @Test
     void getById_success() {
         // given
@@ -71,6 +75,46 @@ class MemberServiceTest {
                 () -> assertThat(memberDto.name()).isEqualTo(memberParam.name()),
                 () -> assertThat(memberDto.age()).isEqualTo(memberParam.age()),
                 () -> assertThat(memberDto.teamId()).isEqualTo(teamId)
+        );
+    }
+
+    @DisplayName("멤버의 이름, 팀의 이름 오름차순으로 멤버와 팀으로 이루어진 페이지들을 반환한다.")
+    @Test
+    void findSortedMemberWithTeamPages_returnMemberWithTeamPagesSortedByName() {
+        // given
+        // 팀 이름을 Team1, Team2, ...로 생성한다.
+        int teamCount = 10;
+        Long[] teamIds = new Long[teamCount];
+        for (int i = 0; i < teamCount; i++) {
+            TeamCreateParam teamParam = new TeamCreateParam("team" + i);
+            teamIds[i] = teamService.create(teamParam);
+        }
+
+        // 멤버를 (Member1, Team1), (Member1, Team2), ..., (Member5, Team1), (Member5, Team2), ...로 생성한다.
+        int memberNameCount = 10;
+        for (int teamI = 0; teamI < teamCount; teamI++) {
+            for (int memberNameI = 0; memberNameI < memberNameCount; memberNameI++) {
+                MemberCreateParam memberParam = new MemberCreateParam("member" + memberNameI, 10, teamIds[teamI]);
+                memberService.create(memberParam);
+            }
+        }
+
+        Pageable pageable = PageRequest.of(1, 10, Sort.by(
+                Sort.Order.asc("member.name"),
+                Sort.Order.asc("team.name")
+        ));
+
+        // when
+        Page<MemberWithTeamDto> result = memberService.findSortedMemberWithTeamPages(pageable);
+
+        // then
+        List<MemberWithTeamDto> content = result.getContent();
+        Assertions.assertAll("멤버의 이름, 팀의 이름 오름차순 결과",
+                () -> assertThat(content).size().isEqualTo(10),
+                () -> assertThat(content.get(0).memberDto().name()).isEqualTo("member1"),
+                () -> assertThat(content.get(0).teamDto().name()).isEqualTo("team0"),
+                () -> assertThat(result.getTotalPages()).isEqualTo(10),
+                () -> assertThat(result.getTotalElements()).isEqualTo(100)
         );
     }
 }
