@@ -1,5 +1,6 @@
 package com.example.springbootlab.config.querydsl;
 
+import com.example.springbootlab.support.QuerydslOrderSupport;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -15,5 +16,10 @@ public class QuerydslConfig {
     @Bean
     public JPAQueryFactory jpaQueryFactory() {
         return new JPAQueryFactory(entityManager);
+    }
+
+    @Bean
+    public QuerydslOrderSupport querydslOrderSupport() {
+        return new QuerydslOrderSupport();
     }
 }
